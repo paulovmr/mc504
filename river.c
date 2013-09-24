@@ -1,6 +1,8 @@
 /*
- * Como implementar barreiras de forma eficiente?
- * Quarta tentativa
+ * Lab 01
+ * Guilherme Henrique Nunes RA 117108
+ * Paulo  Martins RA
+ * Thiago Oliveira RA
  */
 
 #include <pthread.h>
