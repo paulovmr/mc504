@@ -50,11 +50,11 @@ void board(char* type, int i){
 }
 
 void rowBoat(int i){
-    pthread_mutex_lock(&mutex_sail);
+    //pthread_mutex_lock(&mutex_sail);
     printf("\nBOAT [%d] ---------------------------------------------------------->>>>>>", i);
-    sleep(10);
+    sleep(20);
     printf("\nBOAT [%d] <<<<<<----------------------------------------------------------", i);
-    pthread_mutex_unlock(&mutex_sail);
+    //pthread_mutex_unlock(&mutex_sail);
     fleet[i]->isSailing = 0;
 }
 
@@ -70,14 +70,14 @@ void *f_thread_hacker() {
     int i;
 
     hackers++;
-    threadArrival(0);
+    //threadArrival(0);
 
     pthread_mutex_lock (&mutex);
 
     while(1){    
-        for(i = 0; i < boats && (!fleet[i]->isSailing); i++){
+        for(i = 0; i < boats; i++){
             if( !(
-                    ((fleet[i]->hackers == 2) && (fleet[i]->serfs == 1)) || (fleet[i]->serfs == 3)
+                   (fleet[i]->isSailing) || ((fleet[i]->hackers == 2) && (fleet[i]->serfs == 1)) || (fleet[i]->serfs == 3)
                  )
             ){
                 fleet[i]->hackers++;
@@ -118,7 +118,7 @@ void *f_thread_serf() {
     int i;
 
     serfs++;
-    threadArrival(1);
+    //threadArrival(1);
 
     pthread_mutex_lock (&mutex);
 
