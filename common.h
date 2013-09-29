@@ -31,10 +31,6 @@
 #define MICROSOFT_EMPLOYEE_COLOR FG_YELLOW
 #define BODY FG_BLACK
 
-// Parameters
-#define NUMBER_OF_BOATS 5
-#define PEOPLE_PER_BOAT 4 // MINIMO DUAS
-
 // People Type
 #define LINUX_HACKER 0
 #define MICROSOFT_EMPLOYEE 1
@@ -51,7 +47,7 @@ typedef struct Boat {
 	int status;
 	int capacity;
 	int qtd;
-	int people[PEOPLE_PER_BOAT];
+	int* people;
     int hackers;
     int serfs;
     int isSailing;
