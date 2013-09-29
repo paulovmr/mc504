@@ -201,11 +201,22 @@ int main(int argc, char **argv) {
 
     srandom(time(NULL));
 
+    /* Initialize mutexes */
+    pthread_mutex_init(&mutex, NULL);
+    pthread_mutex_init(&mutex_sail, NULL);
+    pthread_mutex_init(&atomic_hackers, NULL);
+    pthread_mutex_init(&atomic_serfs, NULL);
+    
+    /* Draw initial scenario */
+    clearScreen();
+    drawScenario();
+
 	/* Initialize fleet */
     boats = (int) (*argv[1] - '0');
     fleet = malloc(boats*sizeof(Boat*));
     for(j = 0; j < boats; j++){
         fleet[j] = newBoat(j);
+		animateStoppedBoat(fleet[j], &mutex_sail);
     }
     
     /* Initialize people queue */
@@ -215,20 +226,10 @@ int main(int argc, char **argv) {
     for (j = 0; j < queue->length; j++) {
 		queue->queue[j] = -1;
 	}
-
-    /* Initialize mutexes */
-    pthread_mutex_init(&mutex, NULL);
-    pthread_mutex_init(&mutex_sail, NULL);
-    pthread_mutex_init(&atomic_hackers, NULL);
-    pthread_mutex_init(&atomic_serfs, NULL);
     
     /* Initialize semaphores */
     sem_init(&hackers_queue, 0, 0);
     sem_init(&serfs_queue, 0, 0);
-    
-    /* Draw initial scenario */
-    clearScreen();
-    drawScenario();
     
     /* New people come all the time! */
     for (;;) {
