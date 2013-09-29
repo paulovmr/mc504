@@ -16,6 +16,7 @@ pthread_mutex_t atomic_serfs;
 int hackers = 0;
 int serfs = 0;
 int boats = 1;
+int lastBoatSailed = 0;
 Boat** fleet;
 Queue* queue;
 
@@ -81,6 +82,8 @@ void board(int person, int i, int position){
 void rowBoat(int i){
 	Boat* boat = fleet[i];
 
+    lastBoatSailed = i;
+
     animateBoatTravel(boat, &mutex_sail);    
     boat->isSailing = 0;
 }
@@ -94,15 +97,17 @@ void freeWaitings(){
 
 void *f_thread_hacker() {
     
-    int i, position;
+    int i, position, firstBoatToCheck, lastBoatToCheck;
 
     atomic_inc_hackers();
     position = threadArrival(LINUX_HACKER);
     
     pthread_mutex_lock(&mutex);
 
-    while (1) {    
-        for (i = 0; i < boats; i++) {
+    while (1) {
+	firstBoatToCheck = lastBoatSailed;
+	lastBoatToCheck = boats;
+        for (i = firstBoatToCheck; i < lastBoatToCheck; i++) {
             if (!(
                    (fleet[i]->serfs + fleet[i]->hackers == 4) || (fleet[i]->isSailing) || ((fleet[i]->hackers == 2) && (fleet[i]->serfs == 1)) || (fleet[i]->serfs == 3)
                  )
@@ -133,6 +138,10 @@ void *f_thread_hacker() {
 				
                 return NULL;
             }
+	    if (i == boats - 1 && firstBoatToCheck != 0) {
+		lastBoatToCheck = firstBoatToCheck;
+		i = -1;
+	    }
         }
         
         pthread_mutex_unlock(&mutex);
@@ -146,15 +155,17 @@ void *f_thread_hacker() {
 
 void *f_thread_serf() {
 
-    int i, position;
+    int i, position, firstBoatToCheck, lastBoatToCheck;
 
 	atomic_inc_serfs();
     position = threadArrival(MICROSOFT_EMPLOYEE);
     
     pthread_mutex_lock(&mutex);
 
-    while (1) {    
-        for (i = 0; i < boats; i++) {
+    while (1) {
+        firstBoatToCheck = lastBoatSailed;
+        lastBoatToCheck = boats;
+        for (i = firstBoatToCheck; i < lastBoatToCheck; i++) {
             if (!(
                     (fleet[i]->serfs + fleet[i]->hackers == 4) || (fleet[i]->isSailing) || ((fleet[i]->serfs == 2) && (fleet[i]->hackers == 1)) || (fleet[i]->hackers == 3)
                  )
@@ -184,6 +195,10 @@ void *f_thread_serf() {
 				atomic_dec_serfs();
                 
                 return NULL;
+            }
+            if (i == boats - 1 && firstBoatToCheck != 0) {
+                lastBoatToCheck = firstBoatToCheck;
+                i = -1;
             }
         }
         
