@@ -22,6 +22,8 @@ int lastBoatSailed = 0;
 Boat** fleet;
 Queue* queue;
 
+int aux = 0;
+
 Boat* newBoat(int position){
     Boat* x = malloc (sizeof *x);
 	x->position = position;
@@ -37,6 +39,12 @@ Boat* newBoat(int position){
     pthread_barrier_init(&(x->barrier), NULL, 4);
     
     return x;
+}
+
+void atomic_inc_aux() {
+    pthread_mutex_lock(&atomic_hackers);
+    aux++;
+    pthread_mutex_unlock(&atomic_hackers);
 }
 
 void atomic_inc_hackers() {
@@ -107,6 +115,13 @@ void freeWaitings(){
     for(j = 0; j < hackers; j++) sem_post(&hackers_queue);
 }
 
+void log(int position, int lockUnlock) {
+    pthread_mutex_lock(&mutex_sail);
+	atomic_inc_aux();
+	gotoxy(1, 20 + lockUnlock + 2* position); printf("Thread in position %d - LockUnlock: %d - aux: %d", position, lockUnlock, aux); flush();
+	pthread_mutex_unlock(&mutex_sail);
+}
+
 void *f_thread_hacker() {
     
     int i, position, firstBoatToCheck, lastBoatToCheck;
@@ -115,6 +130,7 @@ void *f_thread_hacker() {
     atomic_inc_hackers();
     
     pthread_mutex_lock(&mutex);
+    log(position, 0);
 
     while (1) {
 	firstBoatToCheck = lastBoatSailed;
@@ -130,6 +146,7 @@ void *f_thread_hacker() {
                     fleet[i]->isSailing = 1;
                     fleet[i]->hackers = 0;
                     pthread_barrier_wait(&(fleet[i]->barrier));
+    				log(position, 1);
                     pthread_mutex_unlock(&mutex);
                     rowBoat(i);
                     freeWaitings();
@@ -138,10 +155,12 @@ void *f_thread_hacker() {
                     fleet[i]->hackers = 0;
                     fleet[i]->serfs = 0;
                     pthread_barrier_wait(&(fleet[i]->barrier));
+    				log(position, 1);
                     pthread_mutex_unlock(&mutex);
                     rowBoat(i);
                     freeWaitings();
                 } else {
+    				log(position, 1);
                     pthread_mutex_unlock(&mutex);
                     pthread_barrier_wait(&(fleet[i]->barrier));
                 }
@@ -150,12 +169,14 @@ void *f_thread_hacker() {
 				
                 return NULL;
             }
-	    if (i == boats - 1 && firstBoatToCheck != 0) {
-		lastBoatToCheck = firstBoatToCheck;
-		i = -1;
-	    }
+            
+			if (i == boats - 1 && firstBoatToCheck != 0) {
+				lastBoatToCheck = firstBoatToCheck;
+				i = -1;
+			}
         }
         
+		log(position, 1);
         pthread_mutex_unlock(&mutex);
         sem_wait(&hackers_queue);
     }  
@@ -173,6 +194,7 @@ void *f_thread_serf() {
 	atomic_inc_serfs();
     
     pthread_mutex_lock(&mutex);
+    log(position, 0);
 
     while (1) {
         firstBoatToCheck = lastBoatSailed;
@@ -188,6 +210,7 @@ void *f_thread_serf() {
                     fleet[i]->isSailing = 1;
                     fleet[i]->serfs = 0;
                     pthread_barrier_wait(&(fleet[i]->barrier));
+    				log(position, 1);
                     pthread_mutex_unlock(&mutex);
                     rowBoat(i);
                     freeWaitings();
@@ -196,10 +219,12 @@ void *f_thread_serf() {
                     fleet[i]->hackers = 0;
                     fleet[i]->serfs = 0;
                     pthread_barrier_wait(&(fleet[i]->barrier));
+    				log(position, 1);
                     pthread_mutex_unlock(&mutex);
                     rowBoat(i);
                     freeWaitings();
                 } else {
+    				log(position, 1);
                     pthread_mutex_unlock(&mutex);
                     pthread_barrier_wait(&(fleet[i]->barrier));
                 }
@@ -208,12 +233,14 @@ void *f_thread_serf() {
                 
                 return NULL;
             }
+            
             if (i == boats - 1 && firstBoatToCheck != 0) {
                 lastBoatToCheck = firstBoatToCheck;
                 i = -1;
             }
         }
         
+		log(position, 1);
         pthread_mutex_unlock(&mutex);
         sem_wait(&serfs_queue);
     } 
@@ -263,7 +290,7 @@ int main(int argc, char **argv) {
     
     /* New people come all the time! */
     for (;;) {
-        usleep(100000);
+        usleep(500000);
         j = random() % 2;
         if (j) {
             pthread_create(&thr, NULL, f_thread_hacker, NULL);
