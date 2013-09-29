@@ -18,6 +18,8 @@ pthread_cond_t arrival_space;
 int hackers = 0;
 int serfs = 0;
 int boats = 1;
+int boatCapacity = 4;
+int halfBoatCapacity = 2;
 int lastBoatSailed = 0;
 Boat** fleet;
 Queue* queue;
@@ -30,13 +32,13 @@ Boat* newBoat(int position){
 	x->x = 11;
 	x->y = 2 + (position * BOAT_HEIGHT);
 	x->status = 0;
-	x->capacity = 4;
+	x->capacity = boatCapacity;
 	x->qtd = 0;
-	x->people = malloc(4 * sizeof(int));
+	x->people = malloc(boatCapacity * sizeof(int));
     x->hackers = 0;
     x->serfs = 0;
     x->isSailing = 0;
-    pthread_barrier_init(&(x->barrier), NULL, 4);
+    pthread_barrier_init(&(x->barrier), NULL, boatCapacity);
     
     return x;
 }
@@ -140,12 +142,13 @@ void *f_thread_hacker() {
 		
         for (i = firstBoatToCheck; i < lastBoatToCheck; i++) {
             if (!(
-                   (fleet[i]->serfs + fleet[i]->hackers == 4) || (fleet[i]->isSailing) || ((fleet[i]->hackers == 2) && (fleet[i]->serfs == 1)) || (fleet[i]->serfs == 3)
+                   (fleet[i]->serfs + fleet[i]->hackers == boatCapacity) || (fleet[i]->isSailing)
+			 || ((fleet[i]->hackers == halfBoatCapacity) && (fleet[i]->serfs == (halfBoatCapacity - 1))) || (fleet[i]->serfs == (halfBoatCapacity + 1))
                  )
             ) {
                 fleet[i]->hackers++;
                 board(LINUX_HACKER, i, position);
-                if (fleet[i]->hackers == 4) {
+                if (fleet[i]->hackers == boatCapacity) {
                     fleet[i]->isSailing = 1;
                     fleet[i]->hackers = 0;
                     pthread_barrier_wait(&(fleet[i]->barrier));
@@ -153,7 +156,7 @@ void *f_thread_hacker() {
                     pthread_mutex_unlock(&mutex);
                     rowBoat(i);
                     freeWaitings();
-                } else if ((fleet[i]->hackers == 2)&&(fleet[i]->serfs == 2)) {
+                } else if ((fleet[i]->hackers == halfBoatCapacity)&&(fleet[i]->serfs == halfBoatCapacity)) {
                     fleet[i]->isSailing = 1;
                     fleet[i]->hackers = 0;
                     fleet[i]->serfs = 0;
@@ -205,12 +208,13 @@ void *f_thread_serf() {
         
         for (i = firstBoatToCheck; i < lastBoatToCheck; i++) {
             if (!(
-                    (fleet[i]->serfs + fleet[i]->hackers == 4) || (fleet[i]->isSailing) || ((fleet[i]->serfs == 2) && (fleet[i]->hackers == 1)) || (fleet[i]->hackers == 3)
+                    (fleet[i]->serfs + fleet[i]->hackers == boatCapacity) || (fleet[i]->isSailing) 
+			|| ((fleet[i]->serfs == halfBoatCapacity) && (fleet[i]->hackers == (halfBoatCapacity - 1))) || (fleet[i]->hackers == (halfBoatCapacity + 1))
                  )
             ) {
                 fleet[i]->serfs++;
                 board(MICROSOFT_EMPLOYEE, i, position);
-                if (fleet[i]->serfs == 4) {
+                if (fleet[i]->serfs == boatCapacity) {
                     fleet[i]->isSailing = 1;
                     fleet[i]->serfs = 0;
                     pthread_barrier_wait(&(fleet[i]->barrier));
@@ -218,7 +222,7 @@ void *f_thread_serf() {
                     pthread_mutex_unlock(&mutex);
                     rowBoat(i);
                     freeWaitings();
-                } else if ((fleet[i]->hackers == 2)&&(fleet[i]->serfs == 2)) {
+                } else if ((fleet[i]->hackers == halfBoatCapacity)&&(fleet[i]->serfs == halfBoatCapacity)) {
                     fleet[i]->isSailing = 1;
                     fleet[i]->hackers = 0;
                     fleet[i]->serfs = 0;
@@ -258,8 +262,17 @@ int main(int argc, char **argv) {
     pthread_t thr;
     int j;
 
+    boats = (argv[1] == NULL) ? 1 : (int) (*argv[1] - '0');
+    boatCapacity = (argv[2] == NULL) ? 4 : (int) (*argv[2] - '0');
+
+    if (boatCapacity % 2 != 0) {
+	printf("The boat capacity should be an even number!\n");
+	return 1;
+    } else {
+	halfBoatCapacity = (boatCapacity / 2);
+    }
+
     srandom(time(NULL));
-    boats = (int) (*argv[1] - '0');
 
     /* Initialize mutexes */
     pthread_mutex_init(&mutex, NULL);
@@ -282,7 +295,7 @@ int main(int argc, char **argv) {
     
     /* Initialize people queue */
 	queue = malloc(sizeof(Queue));
-	queue->length = 4 * boats;
+	queue->length = boatCapacity * boats;
 	queue->queue = malloc(queue->length * sizeof(int));
     for (j = 0; j < queue->length; j++) {
 		queue->queue[j] = -1;
