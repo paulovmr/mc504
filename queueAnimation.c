@@ -45,7 +45,7 @@ int enqueue(Queue* queue, int person, pthread_mutex_t* mutex_sail) {
 		if (queue->queue[i] == -1) {
 			queue->queue[i] = person;
 			drawPerson(0, i, person, mutex_sail);
-			sleep(1);
+			usleep(100000);
 			return i;
 		}
 	}
@@ -63,18 +63,22 @@ int dequeue(Queue* queue, int position, pthread_mutex_t* mutex_sail, pthread_con
 }
 
 void drawBoatDelivery(Boat* boat, pthread_mutex_t* mutex_sail) {
-	int i;
+	int i, j;
 	
+	j = boat->capacity;
+	if (j < 4) j = 4;
 	for (i = 0; i < boat->qtd; i++) {
-		drawPerson(1, 4 * boat->position + i, boat->people[i], mutex_sail);
+		drawPerson(1, j * boat->position + i, boat->people[i], mutex_sail);
 	}
 }
 
 void eraseBoatDelivery(Boat* boat, pthread_mutex_t* mutex_sail) {
-	int i;
+	int i, j;
 	
+	j = boat->capacity;
+	if (j < 4) j = 4;
 	for (i = 0; i < boat->qtd; i++) {
-		erasePerson(1, 4 * boat->position + i, mutex_sail);
+		erasePerson(1, j * boat->position + i, mutex_sail);
 	}
 }
 

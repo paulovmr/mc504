@@ -27,10 +27,15 @@ Queue* queue;
 int aux = 0;
 
 Boat* newBoat(int position){
+	int i;
     Boat* x = malloc (sizeof *x);
 	x->position = position;
 	x->x = 11;
-	x->y = 2 + (position * BOAT_HEIGHT);
+	
+	i = 3 * (boatCapacity / 2);
+	if (i < 6) i = 6;
+	x->y = 2 + (position * i);
+	
 	x->status = 0;
 	x->capacity = boatCapacity;
 	x->qtd = 0;
@@ -268,10 +273,10 @@ int main(int argc, char **argv) {
     boatCapacity = (argv[2] == NULL) ? 4 : (int) (*argv[2] - '0');
 
     if (boatCapacity % 2 != 0) {
-	printf("The boat capacity should be an even number!\n");
-	return 1;
+		printf("The boat capacity should be an even number!\n");
+		return 1;
     } else {
-	halfBoatCapacity = (boatCapacity / 2);
+		halfBoatCapacity = (boatCapacity / 2);
     }
 
     srandom(time(NULL));
@@ -286,7 +291,7 @@ int main(int argc, char **argv) {
     
     /* Draw initial scenario */
     clearScreen();
-    drawScenario(boats);
+    drawScenario(boats, boatCapacity);
 
 	/* Initialize fleet */
     fleet = malloc(boats*sizeof(Boat*));
@@ -297,7 +302,9 @@ int main(int argc, char **argv) {
     
     /* Initialize people queue */
 	queue = malloc(sizeof(Queue));
-	queue->length = boatCapacity * boats;
+	j = boatCapacity;
+	if (j < 4) j = 4;
+	queue->length = j * boats;
 	queue->queue = malloc(queue->length * sizeof(int));
     for (j = 0; j < queue->length; j++) {
 		queue->queue[j] = -1;
@@ -309,7 +316,7 @@ int main(int argc, char **argv) {
     
     /* New people come all the time! */
     for (;;) {
-        usleep(100000);
+        usleep(900000);
         j = random() % 2;
         if (j) {
             pthread_create(&thr, NULL, f_thread_hacker, NULL);

@@ -2,4 +2,4 @@
 
 void drawScenarioLine(int l);
 
-void drawScenario(int boats);
+void drawScenario(int boats, int boatCapacity);
