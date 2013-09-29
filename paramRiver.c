@@ -143,7 +143,8 @@ void *f_thread_hacker() {
         for (i = firstBoatToCheck; i < lastBoatToCheck; i++) {
             if (!(
                    (fleet[i]->serfs + fleet[i]->hackers == boatCapacity) || (fleet[i]->isSailing)
-			 || ((fleet[i]->hackers == halfBoatCapacity) && (fleet[i]->serfs == (halfBoatCapacity - 1))) || (fleet[i]->serfs == (halfBoatCapacity + 1))
+			|| ((fleet[i]->hackers == halfBoatCapacity) && (fleet[i]->serfs > 0))
+			|| (fleet[i]->serfs >= (halfBoatCapacity + 1))
                  )
             ) {
                 fleet[i]->hackers++;
@@ -209,7 +210,8 @@ void *f_thread_serf() {
         for (i = firstBoatToCheck; i < lastBoatToCheck; i++) {
             if (!(
                     (fleet[i]->serfs + fleet[i]->hackers == boatCapacity) || (fleet[i]->isSailing) 
-			|| ((fleet[i]->serfs == halfBoatCapacity) && (fleet[i]->hackers == (halfBoatCapacity - 1))) || (fleet[i]->hackers == (halfBoatCapacity + 1))
+			|| ((fleet[i]->serfs == halfBoatCapacity) && (fleet[i]->hackers > 0)) 
+			|| (fleet[i]->hackers >= (halfBoatCapacity + 1))
                  )
             ) {
                 fleet[i]->serfs++;
