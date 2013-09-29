@@ -82,6 +82,7 @@ int threadArrival(int i){
 	int position = -1;
 	pthread_mutex_lock(&arrival);
 	while (position == -1) {
+		usleep(500000);
 		position = enqueue(queue, i, &mutex_sail);
 		if (position == -1) {
 			pthread_cond_wait(&arrival_space, &arrival);
