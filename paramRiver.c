@@ -103,7 +103,7 @@ void *f_thread_hacker() {
     while (1) {    
         for (i = 0; i < boats; i++) {
             if (!(
-                   (fleet[i]->isSailing) || ((fleet[i]->hackers == 2) && (fleet[i]->serfs == 1)) || (fleet[i]->serfs == 3)
+                   (fleet[i]->serfs + fleet[i]->hackers == 4) || (fleet[i]->isSailing) || ((fleet[i]->hackers == 2) && (fleet[i]->serfs == 1)) || (fleet[i]->serfs == 3)
                  )
             ) {
                 fleet[i]->hackers++;
@@ -153,9 +153,9 @@ void *f_thread_serf() {
     pthread_mutex_lock(&mutex);
 
     while (1) {    
-        for (i = 0; i < boats && (!fleet[i]->isSailing); i++) {
+        for (i = 0; i < boats; i++) {
             if (!(
-                    ((fleet[i]->serfs == 2) && (fleet[i]->hackers == 1)) || (fleet[i]->hackers == 3)
+                    (fleet[i]->serfs + fleet[i]->hackers == 4) || (fleet[i]->isSailing) || ((fleet[i]->serfs == 2) && (fleet[i]->hackers == 1)) || (fleet[i]->hackers == 3)
                  )
             ) {
                 fleet[i]->serfs++;
