@@ -249,8 +249,15 @@ int main(int argc, char **argv) {
     pthread_t thr;
     int j;
 
-    boats = (argv[1] == NULL) ? 1 : (int) (*argv[1] - '0');
-    boatCapacity = (argv[2] == NULL) ? 4 : (int) (*argv[2] - '0');
+    boats = 1;
+    boatCapacity = 4;
+    if (argv[1] != NULL) {
+        boats = atoi(argv[1]);
+        
+        if (argv[2] != NULL) {
+            boatCapacity = atoi(argv[2]);
+        }
+    }
 
     if (boatCapacity % 2 != 0) {
         printf("A capacidade do barco deve ser um número par!\n");
