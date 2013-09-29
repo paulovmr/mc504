@@ -316,7 +316,7 @@ int main(int argc, char **argv) {
     
     /* New people come all the time! */
     for (;;) {
-        usleep(900000);
+        usleep(1000000);
         j = random() % 2;
         if (j) {
             pthread_create(&thr, NULL, f_thread_hacker, NULL);

@@ -45,7 +45,7 @@ int enqueue(Queue* queue, int person, pthread_mutex_t* mutex_sail) {
 		if (queue->queue[i] == -1) {
 			queue->queue[i] = person;
 			drawPerson(0, i, person, mutex_sail);
-			usleep(100000);
+			usleep(400000);
 			return i;
 		}
 	}
