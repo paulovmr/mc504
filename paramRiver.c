@@ -116,10 +116,12 @@ void freeWaitings(){
 }
 
 void log(int position, int lockUnlock) {
+	/*int i;
     pthread_mutex_lock(&mutex_sail);
 	atomic_inc_aux();
-	gotoxy(1, 20 + lockUnlock + 2* position); printf("Thread in position %d - LockUnlock: %d - aux: %d", position, lockUnlock, aux); flush();
-	pthread_mutex_unlock(&mutex_sail);
+	i = aux;
+	gotoxy(1, 20 + lockUnlock + 2* position); printf("Thread in position %d - LockUnlock: %d - aux: %d", position, lockUnlock, i); flush();
+	pthread_mutex_unlock(&mutex_sail);*/
 }
 
 void *f_thread_hacker() {
@@ -128,13 +130,14 @@ void *f_thread_hacker() {
 
     position = threadArrival(LINUX_HACKER);
     atomic_inc_hackers();
-    
-    pthread_mutex_lock(&mutex);
-    log(position, 0);
 
     while (1) {
-	firstBoatToCheck = lastBoatSailed;
-	lastBoatToCheck = boats;
+		pthread_mutex_lock(&mutex);
+		log(position, 0);
+		
+		firstBoatToCheck = lastBoatSailed;
+		lastBoatToCheck = boats;
+		
         for (i = firstBoatToCheck; i < lastBoatToCheck; i++) {
             if (!(
                    (fleet[i]->serfs + fleet[i]->hackers == 4) || (fleet[i]->isSailing) || ((fleet[i]->hackers == 2) && (fleet[i]->serfs == 1)) || (fleet[i]->serfs == 3)
@@ -192,13 +195,14 @@ void *f_thread_serf() {
 
     position = threadArrival(MICROSOFT_EMPLOYEE);
 	atomic_inc_serfs();
-    
-    pthread_mutex_lock(&mutex);
-    log(position, 0);
 
     while (1) {
+		pthread_mutex_lock(&mutex);
+		log(position, 0);
+		
         firstBoatToCheck = lastBoatSailed;
         lastBoatToCheck = boats;
+        
         for (i = firstBoatToCheck; i < lastBoatToCheck; i++) {
             if (!(
                     (fleet[i]->serfs + fleet[i]->hackers == 4) || (fleet[i]->isSailing) || ((fleet[i]->serfs == 2) && (fleet[i]->hackers == 1)) || (fleet[i]->hackers == 3)
@@ -290,7 +294,7 @@ int main(int argc, char **argv) {
     
     /* New people come all the time! */
     for (;;) {
-        usleep(500000);
+        usleep(100000);
         j = random() % 2;
         if (j) {
             pthread_create(&thr, NULL, f_thread_hacker, NULL);
