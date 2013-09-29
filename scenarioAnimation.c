@@ -8,10 +8,10 @@ void drawScenarioLine(int l) {
 	printf(GRASS "         " SHORE " " RIVER "                                                                                         " SHORE " " GRASS "         " BG_BLACK "\n");
 }
 
-void drawScenario() {
+void drawScenario(int boats) {
 	int i;
 	
-	for (i = 0; i < BOAT_HEIGHT * NUMBER_OF_BOATS + 1; i++) {
+	for (i = 0; i < BOAT_HEIGHT * boats + 1; i++) {
 		drawScenarioLine(-1);
 	}
 }

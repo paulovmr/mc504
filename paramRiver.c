@@ -27,6 +27,7 @@ Boat* newBoat(int position){
 	x->status = 0;
 	x->capacity = 4;
 	x->qtd = 0;
+	x->people = malloc(4 * sizeof(int));
     x->hackers = 0;
     x->serfs = 0;
     x->isSailing = 0;
@@ -200,6 +201,7 @@ int main(int argc, char **argv) {
     int j;
 
     srandom(time(NULL));
+    boats = (int) (*argv[1] - '0');
 
     /* Initialize mutexes */
     pthread_mutex_init(&mutex, NULL);
@@ -209,10 +211,9 @@ int main(int argc, char **argv) {
     
     /* Draw initial scenario */
     clearScreen();
-    drawScenario();
+    drawScenario(boats);
 
 	/* Initialize fleet */
-    boats = (int) (*argv[1] - '0');
     fleet = malloc(boats*sizeof(Boat*));
     for(j = 0; j < boats; j++){
         fleet[j] = newBoat(j);
