@@ -5,9 +5,10 @@ void clearScreen() {
 }
 
 void gotoxy(int x, int y) {
-	printf("%c[%d;%df", 0x1B, y, x);
+    printf("%c[%d;%df", 0x1B, y, x);
 }
 
 void flush() {
-	fflush(stdout);
+    fflush(stdout);
 }
+
