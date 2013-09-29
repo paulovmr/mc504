@@ -1,61 +1,87 @@
 /*
  * Lab 01
- * Guilherme Henrique Nunes RA 117108
- * Paulo    Martins RA
- * Thiago Oliveira RA
+ * Guilherme Henrique Nunes - RA 117108
+ * Paulo Vitor Martins do Rego - RA 118343
+ * Thiago Pires de Oliveira - RA 123153
  */
 
-#include <pthread.h>
-#include <semaphore.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-
-struct boat{
-    volatile int hackers;
-    volatile int serfs;
-    volatile int isSailing;
-    pthread_barrier_t barrier;
-};
-
-typedef struct boat *Boat;
+#include "boatAnimation.h"
 
 sem_t hackers_queue, serfs_queue;
 pthread_mutex_t mutex;
 pthread_mutex_t mutex_sail;
-//pthread_barrier_t barrier;
-volatile int hackers = 0;
-volatile int serfs = 0;
-volatile int boats = 1;
-volatile Boat* fleet;
+pthread_mutex_t atomic_hackers;
+pthread_mutex_t atomic_serfs;
 
-Boat newBoat(){
-                Boat x = malloc (sizeof *x);
-                x->hackers = 0;
-                x->serfs = 0;
-                x->isSailing = 0;
-                pthread_barrier_init(&(x->barrier), NULL, 4);
-                return x;
+int hackers = 0;
+int serfs = 0;
+int boats = 1;
+Boat** fleet;
+Queue* queue;
+
+Boat* newBoat(int position){
+    Boat* x = malloc (sizeof *x);
+	x->position = position;
+	x->x = 11;
+	x->y = 2 + (position * BOAT_HEIGHT);
+	x->status = 0;
+	x->capacity = 4;
+	x->qtd = 0;
+    x->hackers = 0;
+    x->serfs = 0;
+    x->isSailing = 0;
+    pthread_barrier_init(&(x->barrier), NULL, 4);
+    
+    return x;
 }
 
-void threadArrival(int i){
-    if(i == 0)
-        printf("\nArrive - Hackers: [%d]", hackers);
-    else
-        printf("\nArrive - Serfs: [%d]", serfs);
+void atomic_inc_hackers() {
+    pthread_mutex_lock(&atomic_hackers);
+    hackers++;
+    pthread_mutex_unlock(&atomic_hackers);
 }
 
-void board(char* type, int i){
-    printf("\nI'm boarding the boat [%d] and i'm a %s!", i, type);
+void atomic_dec_hackers() {
+    pthread_mutex_lock(&atomic_hackers);
+    hackers--;
+    pthread_mutex_unlock(&atomic_hackers);
+}
+
+void atomic_inc_serfs() {
+    pthread_mutex_lock(&atomic_serfs);
+    serfs++;
+    pthread_mutex_unlock(&atomic_serfs);
+}
+
+void atomic_dec_serfs() {
+    pthread_mutex_lock(&atomic_serfs);
+    serfs--;
+    pthread_mutex_unlock(&atomic_serfs);
+}
+
+int threadArrival(int i){
+    return enqueue(queue, i, &mutex_sail);
+}
+
+void board(int person, int i, int position){
+	Boat* boat = fleet[i];
+	
+	dequeue(queue, position, &mutex_sail);
+	
+	boat->people[boat->qtd++] = person;
+	
+    animateStoppedBoat(boat, &mutex_sail);
+    
+    if (boat->qtd != boat->capacity) {
+		sleep(1);
+	}
 }
 
 void rowBoat(int i){
-    //pthread_mutex_lock(&mutex_sail);
-    printf("\nBOAT [%d] ---------------------------------------------------------->>>>>>", i);
-    sleep(20);
-    printf("\nBOAT [%d] <<<<<<----------------------------------------------------------", i);
-    //pthread_mutex_unlock(&mutex_sail);
-    fleet[i]->isSailing = 0;
+	Boat* boat = fleet[i];
+
+    animateBoatTravel(boat, &mutex_sail);    
+    boat->isSailing = 0;
 }
 
 void freeWaitings(){
@@ -67,29 +93,29 @@ void freeWaitings(){
 
 void *f_thread_hacker() {
     
-    int i;
+    int i, position;
 
-    hackers++;
-    //threadArrival(0);
+    atomic_inc_hackers();
+    position = threadArrival(LINUX_HACKER);
+    
+    pthread_mutex_lock(&mutex);
 
-    pthread_mutex_lock (&mutex);
-
-    while(1){    
-        for(i = 0; i < boats; i++){
-            if( !(
+    while (1) {    
+        for (i = 0; i < boats; i++) {
+            if (!(
                    (fleet[i]->isSailing) || ((fleet[i]->hackers == 2) && (fleet[i]->serfs == 1)) || (fleet[i]->serfs == 3)
                  )
-            ){
+            ) {
                 fleet[i]->hackers++;
-                board("HACKER", i);
-                if( fleet[i]->hackers == 4){
+                board(LINUX_HACKER, i, position);
+                if (fleet[i]->hackers == 4) {
                     fleet[i]->isSailing = 1;
                     fleet[i]->hackers = 0;
                     pthread_barrier_wait(&(fleet[i]->barrier));
                     pthread_mutex_unlock(&mutex);
                     rowBoat(i);
                     freeWaitings();
-                }else if((fleet[i]->hackers == 2)&&(fleet[i]->serfs == 2)){
+                } else if ((fleet[i]->hackers == 2)&&(fleet[i]->serfs == 2)) {
                     fleet[i]->isSailing = 1;
                     fleet[i]->hackers = 0;
                     fleet[i]->serfs = 0;
@@ -97,47 +123,51 @@ void *f_thread_hacker() {
                     pthread_mutex_unlock(&mutex);
                     rowBoat(i);
                     freeWaitings();
-                }else{
+                } else {
                     pthread_mutex_unlock(&mutex);
                     pthread_barrier_wait(&(fleet[i]->barrier));
                 }
-                hackers--;
+                
+				atomic_dec_hackers();
+				
                 return NULL;
             }
         }
+        
         pthread_mutex_unlock(&mutex);
         sem_wait(&hackers_queue);
     }  
 
-    hackers--;
+	atomic_dec_hackers();
+    
     return NULL;
 }
 
 void *f_thread_serf() {
 
-    int i;
+    int i, position;
 
-    serfs++;
-    //threadArrival(1);
+	atomic_inc_serfs();
+    position = threadArrival(MICROSOFT_EMPLOYEE);
+    
+    pthread_mutex_lock(&mutex);
 
-    pthread_mutex_lock (&mutex);
-
-    while(1){    
-        for(i = 0; i < boats && (!fleet[i]->isSailing); i++){
-            if( !(
+    while (1) {    
+        for (i = 0; i < boats && (!fleet[i]->isSailing); i++) {
+            if (!(
                     ((fleet[i]->serfs == 2) && (fleet[i]->hackers == 1)) || (fleet[i]->hackers == 3)
                  )
-            ){
+            ) {
                 fleet[i]->serfs++;
-                board("SERF", i);
-                if( fleet[i]->serfs == 4){
+                board(MICROSOFT_EMPLOYEE, i, position);
+                if (fleet[i]->serfs == 4) {
                     fleet[i]->isSailing = 1;
                     fleet[i]->serfs = 0;
                     pthread_barrier_wait(&(fleet[i]->barrier));
                     pthread_mutex_unlock(&mutex);
                     rowBoat(i);
                     freeWaitings();
-                }else if((fleet[i]->hackers == 2)&&(fleet[i]->serfs == 2)){
+                } else if ((fleet[i]->hackers == 2)&&(fleet[i]->serfs == 2)) {
                     fleet[i]->isSailing = 1;
                     fleet[i]->hackers = 0;
                     fleet[i]->serfs = 0;
@@ -145,53 +175,70 @@ void *f_thread_serf() {
                     pthread_mutex_unlock(&mutex);
                     rowBoat(i);
                     freeWaitings();
-                }else{
+                } else {
                     pthread_mutex_unlock(&mutex);
                     pthread_barrier_wait(&(fleet[i]->barrier));
                 }
-                serfs--;
+                
+				atomic_dec_serfs();
+                
                 return NULL;
             }
         }
+        
         pthread_mutex_unlock(&mutex);
         sem_wait(&serfs_queue);
     } 
-    serfs--; 
+    
+	atomic_dec_serfs();
+	
     return NULL;
 }
 
 int main(int argc, char **argv) {
     pthread_t thr;
-    int j = 0;
+    int j;
 
     srandom(time(NULL));
 
+	/* Initialize fleet */
     boats = (int) (*argv[1] - '0');
-    fleet = malloc(boats*sizeof(Boat));
-
+    fleet = malloc(boats*sizeof(Boat*));
     for(j = 0; j < boats; j++){
-        fleet[j] = newBoat();
+        fleet[j] = newBoat(j);
     }
+    
+    /* Initialize people queue */
+	queue = malloc(sizeof(Queue));
+	queue->length = 4 * boats;
+	queue->queue = malloc(queue->length * sizeof(int));
+    for (j = 0; j < queue->length; j++) {
+		queue->queue[j] = -1;
+	}
 
     /* Initialize mutexes */
     pthread_mutex_init(&mutex, NULL);
     pthread_mutex_init(&mutex_sail, NULL);
+    pthread_mutex_init(&atomic_hackers, NULL);
+    pthread_mutex_init(&atomic_serfs, NULL);
     
     /* Initialize semaphores */
     sem_init(&hackers_queue, 0, 0);
     sem_init(&serfs_queue, 0, 0);
     
-    /* Initialize barriers */
-    //pthread_barrier_init(&barrier, NULL, 4);
+    /* Draw initial scenario */
+    clearScreen();
+    drawScenario();
     
-    
-    for (;;){
+    /* New people come all the time! */
+    for (;;) {
         sleep(2);
-        j = random()%2;
-        if(j)
+        j = random() % 2;
+        if (j) {
             pthread_create(&thr, NULL, f_thread_hacker, NULL);
-        else
+        } else {
             pthread_create(&thr, NULL, f_thread_serf, NULL);
+        }
     }
 
     pthread_exit(NULL);
