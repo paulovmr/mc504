@@ -53,10 +53,11 @@ int enqueue(Queue* queue, int person, pthread_mutex_t* mutex_sail) {
 	return -1;
 }
 
-int dequeue(Queue* queue, int position, pthread_mutex_t* mutex_sail) {
+int dequeue(Queue* queue, int position, pthread_mutex_t* mutex_sail, pthread_cond_t* arrival_space) {
 	int result = queue->queue[position];
 	queue->queue[position] = -1;
 	erasePerson(0, position, mutex_sail);
+	pthread_cond_signal(arrival_space);
 	
 	return result;
 }

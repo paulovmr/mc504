@@ -12,6 +12,8 @@ pthread_mutex_t mutex;
 pthread_mutex_t mutex_sail;
 pthread_mutex_t atomic_hackers;
 pthread_mutex_t atomic_serfs;
+pthread_mutex_t arrival;
+pthread_cond_t arrival_space;
 
 int hackers = 0;
 int serfs = 0;
@@ -61,13 +63,23 @@ void atomic_dec_serfs() {
 }
 
 int threadArrival(int i){
-    return enqueue(queue, i, &mutex_sail);
+	int position = -1;
+	pthread_mutex_lock(&arrival);
+	while (position == -1) {
+		position = enqueue(queue, i, &mutex_sail);
+		if (position == -1) {
+			pthread_cond_wait(&arrival_space, &arrival);
+		}
+    }
+    pthread_mutex_unlock(&arrival);
+    
+    return position;
 }
 
 void board(int person, int i, int position){
 	Boat* boat = fleet[i];
 	
-	dequeue(queue, position, &mutex_sail);
+	dequeue(queue, position, &mutex_sail, &arrival_space);
 	
 	boat->people[boat->qtd++] = person;
 	
@@ -96,8 +108,8 @@ void *f_thread_hacker() {
     
     int i, position;
 
-    atomic_inc_hackers();
     position = threadArrival(LINUX_HACKER);
+    atomic_inc_hackers();
     
     pthread_mutex_lock(&mutex);
 
@@ -148,8 +160,8 @@ void *f_thread_serf() {
 
     int i, position;
 
-	atomic_inc_serfs();
     position = threadArrival(MICROSOFT_EMPLOYEE);
+	atomic_inc_serfs();
     
     pthread_mutex_lock(&mutex);
 
@@ -208,6 +220,8 @@ int main(int argc, char **argv) {
     pthread_mutex_init(&mutex_sail, NULL);
     pthread_mutex_init(&atomic_hackers, NULL);
     pthread_mutex_init(&atomic_serfs, NULL);
+    pthread_mutex_init(&arrival, NULL);
+    pthread_cond_init(&arrival_space, NULL);
     
     /* Draw initial scenario */
     clearScreen();
@@ -234,7 +248,7 @@ int main(int argc, char **argv) {
     
     /* New people come all the time! */
     for (;;) {
-        sleep(2);
+        usleep(100000);
         j = random() % 2;
         if (j) {
             pthread_create(&thr, NULL, f_thread_hacker, NULL);
