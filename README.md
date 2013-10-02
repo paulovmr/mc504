@@ -7,4 +7,6 @@ MC504 - Sistemas Operacionais
  
 Projetos
 =====
- * Projeto 1 - Problema da travessia do rio (maiores detalhes no "README.md" da pasta "projeto1").
+ * Projeto 1 - Problema da travessia do rio.
+ 
+Obs.: Para maiores detalhes, consulte o "README.md" da pasta de cada projeto.

@@ -12,9 +12,11 @@ Para implementação da solução, foram parametrizados o número de barcos e o 
 Solução
 =====
  * Gerenciamento de threads
+ 
 A entrada e a espera de pessoas no barco é gerenciada por uma barreira, que aguarda o barco atingir sua lotação máxima para iniciar a travessia. A última thread (pessoa) que entra no barco se torna capitão e rema até a outra margem. Novas pessoas (threads) são criadas infinitamente e aguardam na margem até ter uma oportunidade de embarque. O acesso às regiões críticas (posicionamento do cursor, desenho na tela, alteração de variáveis compartilhadas) são gerenciados por mutexes que limitam a uma thread acessando-os simultaneamente.
  
  * Animação
+ 
 A animação foi desenvolvida usando apenas caracteres ASCII e alterações de cores do terminal Unix. Cada thread (exceto o main) é representada por uma pessoa. Quando criada, a pessoa é desenhada na grama e aguarda para embarcar. Quando embarca, ela fica sentada no barco aguardando a última pessoa entrar, que por sua vez assume os remos e leva o barco até o outro lado do rio. Nesse ponto, as pessoas descem do barco, sendo desenhadas na margem.
   
 Instruções de Uso
