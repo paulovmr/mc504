@@ -8,5 +8,6 @@ MC504 - Sistemas Operacionais
 Projetos
 =====
  * Projeto 1 - Problema da travessia do rio.
+ * Projeto 2 - Criação da syscall "forkn".
  
 Obs.: Para maiores detalhes, consulte o "README.md" da pasta de cada projeto.
