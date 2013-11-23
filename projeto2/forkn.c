@@ -14,9 +14,11 @@ asmlinkage long sys_forkn(int n, long* ids) {
   createdProcesses = 0;
   
   for (i = 0; i < n; i++) {
-    ids[i] = sys_fork();
+    id = sys_fork();
+    ids[i] = id;
     
-    if (id != -1) createdProcesses++;
+    if (id != -1)
+        createdProcesses++;
   }
   
   return createdProcesses;
