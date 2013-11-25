@@ -21,7 +21,7 @@ Para montar o ambiente e utilizar as syscalls, os seguintes passos são necessá
  * Incluir o arquivo versionado "forkn.c" no diretório "linux-3.12/arch/x86/kernel/";
  * Incluir o arquivo versionado "mycall.c" no diretório "linux-3.12/arch/x86/kernel/";
  * Rodar o comando "make" no diretório "linux-3.12";
- * Rodar o programa no QEMU, utilizando o comando "qemu-system-x86_64 -hda mc504.img -kernel linux-3.12/arch/i386/boot/bzImage -append "ro root=/dev/hda" -hdb <PROGRAMA>", onde <PROGRAMA> deve ser substituido pelo programa de teste que usa a syscall ("forkn_test" ou "mycall_test", por exemplo);
+ * Rodar o programa no QEMU, utilizando o comando "qemu-system-x86_64 -hda mc504.img -kernel linux-3.12/arch/i386/boot/bzImage -append "ro root=/dev/hda" -hdb PROGRAMA", onde PROGRAMA deve ser substituido pelo programa de teste que usa a syscall ("forkn_test" ou "mycall_test", por exemplo);
  * Para logar no sistema, utilizar o usuário "root" com senha "root";
  * Rodar o comando "cat /dev/hdb > teste";
  * Rodar o comando "chmod +x teste";
